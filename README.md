@@ -1,19 +1,19 @@
 <img width="400" src="https://github.com/user-attachments/assets/44bac428-01bb-4fe9-9d85-96cba7698bee" alt="Tor Logo with the onion and a crosshair on it"/>
 
-# Threat Hunt Report: Unauthorized TOR Usage
+# 🛡️ Threat Hunt Report: Unauthorized TOR Usage
 - [Scenario Creation](https://github.com/dasare/ThreatHuntingProject/blob/main/threat-hunting-scenario.md)
 
-## Platforms and Languages Leveraged
+## 💻 Platforms and Languages Leveraged
 - Windows 10 Virtual Machines (Microsoft Azure)
 - EDR Platform: Microsoft Defender for Endpoint
 - Kusto Query Language (KQL)
 - Tor Browser
 
-##  Scenario
+## 🎯 Scenario
 
 Management suspects that some employees may be using TOR browsers to bypass network security controls because recent network logs show unusual encrypted traffic patterns and connections to known TOR entry nodes. Additionally, there have been anonymous reports of employees discussing ways to access restricted sites during work hours. The goal is to detect any TOR usage and analyze related security incidents to mitigate potential risks. If any use of TOR is found, notify management.
 
-### High-Level TOR-Related IoC Discovery Plan
+### 🧩 High-Level TOR-Related IoC Discovery Plan
 
 - **Check `DeviceFileEvents`** for any `tor(.exe)` or `firefox(.exe)` file events.
 - **Check `DeviceProcessEvents`** for any signs of installation or usage.
@@ -21,7 +21,7 @@ Management suspects that some employees may be using TOR browsers to bypass netw
 
 ---
 
-## Steps Taken
+## 🧪 Steps Taken
 
 ### 1. Searched the `DeviceFileEvents` Table
 
@@ -37,10 +37,9 @@ DeviceFileEvents
 | where Timestamp >= datetime(2025-05-14T22:40:24.677187Z)
 | order by Timestamp desc 
 | project Timestamp, DeviceName, ActionType, FileName, FolderPath, SHA256, Account = InitiatingProcessAccountName
-
 ```
-<img width="868" alt="image" src="https://github.com/user-attachments/assets/1b51016a-6784-42da-9f43-386da69c153d" />
 
+<img width="868" alt="image" src="https://github.com/user-attachments/assets/1b51016a-6784-42da-9f43-386da69c153d" />
 
 ---
 
@@ -51,14 +50,13 @@ I reviewed the DeviceProcessEvents table for any ProcessCommandLine that contain
 **Query used to locate event:**
 
 ```kql
-
 DeviceProcessEvents
 | where DeviceName == "threat-hunt-lab"
 | where ProcessCommandLine  contains "tor-browser-windows-x86_64-portable-14.5.1.exe"
 | project  Timestamp, DeviceName, AccountName, ActionType, FileName, FolderPath, SHA256, ProcessCommandLine
 ```
-<img width="1074" alt="image" src="https://github.com/user-attachments/assets/f98a931e-aff8-4fd7-8dd0-2448ab611383" />
 
+<img width="1074" alt="image" src="https://github.com/user-attachments/assets/f98a931e-aff8-4fd7-8dd0-2448ab611383" />
 
 ---
 
@@ -78,10 +76,9 @@ DeviceProcessEvents
 
 <img width="1244" alt="image" src="https://github.com/user-attachments/assets/452ce4bd-5d7f-4571-af85-17611e6b066d" />
 
-
 ---
 
-### 4. Searched the `DeviceNetworkEvents` Table for TOR Network Connections
+### 4. 🌐 Searched the `DeviceNetworkEvents` Table for TOR Network Connections
 
 I reviewed the DeviceNetworkEvents table for any indication the tor browser was used to establish a connection using any of the known tor ports. At 2025-05-14T22:45:27.7040346Z, an employee on the “threat-hunt-lab” device successfully esablished a connection to the remote IP address 194.147.140.107 on port 443. This the connection was established by the process tor.exe, located in the following folder: c:\users\dasare\desktop\tor browser\browser\torbrowser\tor\tor.exe. I noticed additional connections over port 9150, one successful and the other failed.
 
@@ -97,6 +94,7 @@ DeviceNetworkEvents
 ```
 
 <img width="1224" alt="image" src="https://github.com/user-attachments/assets/12694079-c6be-484f-b962-7964cf258aa7" />
+
 
 
 ---
@@ -177,14 +175,15 @@ DeviceNetworkEvents
 
 ---
 
-## Summary
+## 📝 Summary
 
 User “dasare” downloaded and executed a silent install of the Tor Browser on the device threat-hunt-lab. Following the installation, numerous Tor-related files were placed on the user’s Desktop, including a file named tor-shopping-list.txt. At 22:44:42Z, the Tor Browser was actively launched, as evidenced by the execution of both firefox.exe and tor.exe. Shortly after, at 22:45:27Z, the browser successfully established an outbound encrypted connection to a known remote IP over port 443, with additional activity observed on other known Tor network ports such as 9150. These actions confirm the successful installation, launch, and operational use of the Tor network for outbound encrypted communications.
 
 ---
 
-## Response Taken
+## 🚨 Response Taken
 
 TOR usage was confirmed on endpoint threat-hunt-lab by the user dasare. The device was isolated, and the user's direct manager was notified.
+
 
 ---
